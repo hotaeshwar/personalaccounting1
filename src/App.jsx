@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
-import Header from './components/Header'; // Import the Header component
+import Header from './components/Header';
 import Login from './components/Login';
 import Register from './components/Register';
-import ForgotPassword from './components/ForgotPassword'; // Import the new ForgotPassword component
+import ForgotPassword from './components/ForgotPassword';
 import ExpenseList from './components/ExpenseList';
 import ExpenseForm from './components/ExpenseForm';
 import InvoiceDetails from './components/InvoiceDetails';
@@ -12,23 +11,48 @@ import ArchiveList from './components/ArchiveList';
 import IncomeForm from './components/IncomeForm';
 import ProfitLoss from './components/ProfitLoss';
 import ExportReport from './components/ExportReport';
-import UserTransactions from './components/UserTransactions'; // Import the new UserTransactions component
-import PrivateRoute from './components/PrivateRoute';
+import UserTransactions from './components/UserTransactions';
 
-// Layout component that conditionally renders sidebar based on route
-const AppLayout = () => {
+function App() {
+  const [currentView, setCurrentView] = useState('login');
   const [isLoggedIn, setIsLoggedIn] = useState(localStorage.getItem('token') !== null);
-  const location = useLocation();
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState(null);
   
-  // Check if current route is login, register, or forgot-password
-  const isAuthPage = location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/forgot-password';
-  
+  // Check URL hash for special routes
   useEffect(() => {
-    const checkLoginStatus = () => {
-      setIsLoggedIn(localStorage.getItem('token') !== null);
+    const checkRoute = () => {
+      const hash = window.location.hash.replace('#', '');
+      if (hash && isLoggedIn) {
+        if (hash.startsWith('invoice/')) {
+          const invoiceId = hash.split('/')[1];
+          setSelectedInvoiceId(invoiceId);
+          setCurrentView('invoice-details');
+        } else {
+          setCurrentView(hash);
+        }
+      } else if (!isLoggedIn && hash) {
+        setCurrentView(hash);
+      }
     };
     
-    checkLoginStatus();
+    checkRoute();
+    window.addEventListener('hashchange', checkRoute);
+    
+    return () => window.removeEventListener('hashchange', checkRoute);
+  }, [isLoggedIn]);
+  
+  // Listen for login state changes
+  useEffect(() => {
+    const checkLoginStatus = () => {
+      const loggedIn = localStorage.getItem('token') !== null;
+      setIsLoggedIn(loggedIn);
+      if (!loggedIn) {
+        setCurrentView('login');
+      } else if (currentView === 'login') {
+        setCurrentView('expenses');
+      }
+    };
+    
     window.addEventListener('storage', checkLoginStatus);
     window.addEventListener('loginStateChanged', checkLoginStatus);
     
@@ -36,44 +60,67 @@ const AppLayout = () => {
       window.removeEventListener('storage', checkLoginStatus);
       window.removeEventListener('loginStateChanged', checkLoginStatus);
     };
-  }, []);
+  }, [currentView]);
+  
+  // Auto scroll to top when view changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentView]);
+  
+  const renderView = () => {
+    // Auth pages
+    if (currentView === 'login') {
+      return <Login setLoggedIn={setIsLoggedIn} setCurrentView={setCurrentView} />;
+    }
+    if (currentView === 'register') {
+      return <Register setCurrentView={setCurrentView} />;
+    }
+    if (currentView === 'forgot-password') {
+      return <ForgotPassword setCurrentView={setCurrentView} />;
+    }
+    
+    // Protected pages
+    if (!isLoggedIn) {
+      return <Login setLoggedIn={setIsLoggedIn} setCurrentView={setCurrentView} />;
+    }
+    
+    switch(currentView) {
+      case 'expenses':
+        return <ExpenseList setCurrentView={setCurrentView} setSelectedInvoiceId={setSelectedInvoiceId} />;
+      case 'add-expense':
+        return <ExpenseForm setCurrentView={setCurrentView} />;
+      case 'invoice-details':
+        return <InvoiceDetails invoiceId={selectedInvoiceId} setCurrentView={setCurrentView} />;
+      case 'archive':
+        return <ArchiveList setCurrentView={setCurrentView} />;
+      case 'income':
+        return <IncomeForm setCurrentView={setCurrentView} />;
+      case 'profit-loss':
+        return <ProfitLoss />;
+      case 'export-report':
+        return <ExportReport />;
+      case 'user-transactions':
+        return <UserTransactions />;
+      default:
+        return <ExpenseList setCurrentView={setCurrentView} setSelectedInvoiceId={setSelectedInvoiceId} />;
+    }
+  };
+  
+  const isAuthPage = ['login', 'register', 'forgot-password'].includes(currentView);
   
   return (
     <div className="flex flex-col h-screen bg-gray-100">
-      {/* Only render Header when logged in AND not on auth pages */}
       {isLoggedIn && !isAuthPage && <Header />}
       
       <div className="flex flex-1 overflow-hidden">
-        {/* Only show sidebar if user is logged in AND not on auth pages */}
-        {isLoggedIn && !isAuthPage && <Sidebar />}
+        {isLoggedIn && !isAuthPage && <Sidebar currentView={currentView} setCurrentView={setCurrentView} />}
         
         <div className={`flex-1 p-4 overflow-auto ${isLoggedIn && !isAuthPage ? 'ml-16' : ''}`}>
-          <Routes>
-            <Route path="/login" element={<Login setLoggedIn={setIsLoggedIn} />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/" element={<PrivateRoute><ExpenseList /></PrivateRoute>} />
-            <Route path="/expenses" element={<PrivateRoute><ExpenseList /></PrivateRoute>} />
-            <Route path="/add-expense" element={<PrivateRoute><ExpenseForm /></PrivateRoute>} />
-            <Route path="/invoice/:invoice_id" element={<PrivateRoute><InvoiceDetails /></PrivateRoute>} />
-            <Route path="/archive" element={<PrivateRoute><ArchiveList /></PrivateRoute>} />
-            <Route path="/income" element={<PrivateRoute><IncomeForm /></PrivateRoute>} />
-            <Route path="/profit-loss" element={<PrivateRoute><ProfitLoss /></PrivateRoute>} />
-            <Route path="/export-report" element={<PrivateRoute><ExportReport /></PrivateRoute>} />
-            <Route path="/user-transactions" element={<PrivateRoute><UserTransactions /></PrivateRoute>} />
-          </Routes>
+          {renderView()}
         </div>
       </div>
     </div>
   );
-};
-
-const App = () => {
-  return (
-    <Router>
-      <AppLayout />
-    </Router>
-  );
-};
+}
 
 export default App;
