@@ -339,7 +339,7 @@ const ExpenseList = () => {
               Manage and track your financial transactions
             </p>
             {isAdmin && (
-              <div className="flex items-center mt-2 bg-purple-500 bg-opacity-50 px-3 py-1 rounded-full">
+              <div className="flex items-center mt-2 bg-orange-500 bg-opacity-50 px-3 py-1 rounded-full">
                 <FontAwesomeIcon icon={faUserShield} className="text-white mr-2" />
                 <span className="text-white text-sm font-medium">Admin Account</span>
               </div>
@@ -368,7 +368,6 @@ const ExpenseList = () => {
         </div>
       </div>
 
-      {/* Rest of your component remains exactly the same */}
       {/* Tab Navigation */}
       <div className="bg-white shadow-md rounded-lg overflow-hidden mb-4 sm:mb-6">
         <div className="grid grid-cols-2">
@@ -412,7 +411,6 @@ const ExpenseList = () => {
         </div>
       )}
 
-      {/* ... rest of your component JSX remains exactly the same ... */}
       {!isLoading && currentData.length > 0 && (
         <div className="mb-4 sm:mb-6 md:mb-8">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
@@ -502,11 +500,11 @@ const ExpenseList = () => {
         </div>
       ) : (
         <div className="bg-white shadow-xl rounded-lg overflow-hidden border border-gray-100">
-          {/* ... rest of your table JSX remains exactly the same ... */}
+          {/* Table content would go here */}
         </div>
       )}
     </div>
   );
 };
 
-export default ExpenseList;
+export default ExpenseList
