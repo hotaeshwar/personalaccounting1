@@ -205,7 +205,7 @@ const Register = () => {
                                 )}
                             </button>
                             <a 
-                                href="/login"
+                                href="/#/login"
                                 className="w-full sm:w-auto text-center text-orange-500 text-sm hover:text-orange-600 transition-colors duration-300"
                             >
                                 Already have an account? Login
