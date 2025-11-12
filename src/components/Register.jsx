@@ -79,31 +79,31 @@ const Register = () => {
     };
 
     return (
-        <div className="flex justify-center items-center min-h-screen bg-gray-900 px-4 py-8">
-            <div className="relative w-full max-w-md bg-gray-900 rounded-lg overflow-hidden p-2">
+        <div className="flex justify-center items-center min-h-screen bg-white px-4 py-8">
+            <div className="relative w-full max-w-md bg-white rounded-lg overflow-hidden p-2">
                 {/* Animated border effects */}
                 <div className="absolute inset-0 rounded-lg overflow-hidden">
-                    <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-b from-transparent via-cyan-400 to-cyan-400 animate-[spin_6s_linear_infinite] origin-bottom-right"></div>
-                    <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-b from-transparent via-cyan-400 to-cyan-400 animate-[spin_6s_linear_infinite] origin-bottom-right" style={{animationDelay: '-3s'}}></div>
-                    <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-b from-transparent via-pink-600 to-pink-600 animate-[spin_6s_linear_infinite] origin-bottom-right" style={{animationDelay: '-1.5s'}}></div>
-                    <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-b from-transparent via-pink-600 to-pink-600 animate-[spin_6s_linear_infinite] origin-bottom-right" style={{animationDelay: '-4.5s'}}></div>
+                    <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-b from-transparent via-orange-400 to-orange-400 animate-[spin_6s_linear_infinite] origin-bottom-right"></div>
+                    <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-b from-transparent via-orange-400 to-orange-400 animate-[spin_6s_linear_infinite] origin-bottom-right" style={{animationDelay: '-3s'}}></div>
+                    <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-b from-transparent via-green-600 to-green-600 animate-[spin_6s_linear_infinite] origin-bottom-right" style={{animationDelay: '-1.5s'}}></div>
+                    <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-b from-transparent via-green-600 to-green-600 animate-[spin_6s_linear_infinite] origin-bottom-right" style={{animationDelay: '-4.5s'}}></div>
                 </div>
 
                 {/* Form container */}
-                <div className="relative bg-gray-800 rounded-lg p-6 sm:p-8 z-10">
-                    <h2 className="text-white font-medium text-center tracking-wider text-2xl sm:text-3xl mb-8">
+                <div className="relative bg-gray-100 rounded-lg p-6 sm:p-8 z-10">
+                    <h2 className="text-gray-900 font-medium text-center tracking-wider text-2xl sm:text-3xl mb-8">
                         Create Account
                     </h2>
 
                     {error && (
-                        <div className="bg-red-900 bg-opacity-50 text-red-300 p-3 rounded-md mb-6 border border-red-700">
+                        <div className="bg-orange-100 text-orange-700 p-3 rounded-md mb-6 border border-orange-300">
                             <span className="text-sm">{error}</span>
                         </div>
                     )}
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="w-full">
-                            <label className="block text-gray-300 text-sm font-medium mb-2">
+                            <label className="block text-gray-700 text-sm font-medium mb-2">
                                 Username
                             </label>
                             <input
@@ -112,14 +112,14 @@ const Register = () => {
                                 required
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
-                                className="w-full py-3 px-4 bg-gray-700 border border-gray-600 rounded-lg text-white text-base placeholder-gray-400 transition-all duration-300 outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400 focus:ring-opacity-50 hover:border-gray-500"
+                                className="w-full py-3 px-4 bg-white border border-gray-300 rounded-lg text-gray-900 text-base placeholder-gray-400 transition-all duration-300 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-400 focus:ring-opacity-50 hover:border-gray-400"
                                 placeholder="Enter your username"
                                 disabled={loading}
                             />
                         </div>
 
                         <div className="w-full">
-                            <label className="block text-gray-300 text-sm font-medium mb-2">
+                            <label className="block text-gray-700 text-sm font-medium mb-2">
                                 Password
                             </label>
                             <div className="relative">
@@ -129,14 +129,14 @@ const Register = () => {
                                     required
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full py-3 px-4 pr-12 bg-gray-700 border border-gray-600 rounded-lg text-white text-base placeholder-gray-400 transition-all duration-300 outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400 focus:ring-opacity-50 hover:border-gray-500"
+                                    className="w-full py-3 px-4 pr-12 bg-white border border-gray-300 rounded-lg text-gray-900 text-base placeholder-gray-400 transition-all duration-300 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-400 focus:ring-opacity-50 hover:border-gray-400"
                                     placeholder="Create a strong password (min 6 chars)"
                                     disabled={loading}
                                     minLength={6}
                                 />
                                 <button 
                                     type="button" 
-                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors duration-300"
+                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-900 transition-colors duration-300"
                                     onClick={togglePasswordVisibility}
                                     disabled={loading}
                                 >
@@ -146,7 +146,7 @@ const Register = () => {
                         </div>
 
                         <div className="w-full">
-                            <label className="block text-gray-300 text-sm font-medium mb-2">
+                            <label className="block text-gray-700 text-sm font-medium mb-2">
                                 Role
                             </label>
                             <div className="relative">
@@ -154,13 +154,13 @@ const Register = () => {
                                     name="role"
                                     value={role}
                                     onChange={(e) => setRole(e.target.value)}
-                                    className="w-full py-3 px-4 pr-10 bg-gray-700 border border-gray-600 rounded-lg text-white text-base appearance-none transition-all duration-300 outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400 focus:ring-opacity-50 hover:border-gray-500 cursor-pointer"
+                                    className="w-full py-3 px-4 pr-10 bg-white border border-gray-300 rounded-lg text-gray-900 text-base appearance-none transition-all duration-300 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-400 focus:ring-opacity-50 hover:border-gray-400 cursor-pointer"
                                     disabled={loading}
                                 >
-                                    <option value="guest" className="bg-gray-800">Guest</option>
-                                    <option value="admin" className="bg-gray-800">Admin</option>
+                                    <option value="guest" className="bg-white">Guest</option>
+                                    <option value="admin" className="bg-white">Admin</option>
                                 </select>
-                                <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">
+                                <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none">
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                                     </svg>
@@ -170,7 +170,7 @@ const Register = () => {
 
                         {role === 'admin' && (
                             <div className="w-full">
-                                <label className="block text-gray-300 text-sm font-medium mb-2">
+                                <label className="block text-gray-700 text-sm font-medium mb-2">
                                     Admin Key
                                 </label>
                                 <input
@@ -179,7 +179,7 @@ const Register = () => {
                                     required={role === 'admin'}
                                     value={adminKey}
                                     onChange={(e) => setAdminKey(e.target.value)}
-                                    className="w-full py-3 px-4 bg-gray-700 border border-gray-600 rounded-lg text-white text-base placeholder-gray-400 transition-all duration-300 outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400 focus:ring-opacity-50 hover:border-gray-500"
+                                    className="w-full py-3 px-4 bg-white border border-gray-300 rounded-lg text-gray-900 text-base placeholder-gray-400 transition-all duration-300 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-400 focus:ring-opacity-50 hover:border-gray-400"
                                     placeholder="Enter admin key"
                                     disabled={loading}
                                 />
@@ -190,7 +190,7 @@ const Register = () => {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full py-3 sm:py-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-semibold rounded-lg hover:from-cyan-600 hover:to-blue-600 active:from-cyan-700 active:to-blue-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl text-base"
+                                className="w-full py-3 sm:py-4 bg-gradient-to-r from-orange-500 to-green-500 text-white font-semibold rounded-lg hover:from-orange-600 hover:to-green-600 active:from-orange-700 active:to-green-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl text-base"
                             >
                                 {loading ? (
                                     <span className="flex items-center justify-center">
@@ -206,7 +206,7 @@ const Register = () => {
                             </button>
                             <a 
                                 href="/login"
-                                className="w-full sm:w-auto text-center text-cyan-400 text-sm hover:text-cyan-300 transition-colors duration-300"
+                                className="w-full sm:w-auto text-center text-orange-500 text-sm hover:text-orange-600 transition-colors duration-300"
                             >
                                 Already have an account? Login
                             </a>
@@ -214,7 +214,7 @@ const Register = () => {
                     </form>
 
                     <div className="mt-6 text-center">
-                        <p className="text-gray-400 text-xs sm:text-sm">
+                        <p className="text-gray-600 text-xs sm:text-sm">
                             🔒 Secure Firebase Registration
                         </p>
                     </div>
