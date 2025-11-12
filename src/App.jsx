@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
+import { HashRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import Login from './components/Login';
@@ -14,7 +14,6 @@ import ProfitLoss from './components/ProfitLoss';
 import ExportReport from './components/ExportReport';
 import UserTransactions from './components/UserTransactions';
 import PrivateRoute from './components/PrivateRoute';
-
 // Layout component that conditionally renders sidebar based on route
 const AppLayout = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(localStorage.getItem('token') !== null);
@@ -67,7 +66,6 @@ const AppLayout = () => {
     </div>
   );
 };
-
 const App = () => {
   return (
     <Router>
@@ -75,5 +73,4 @@ const App = () => {
     </Router>
   );
 };
-
 export default App;
