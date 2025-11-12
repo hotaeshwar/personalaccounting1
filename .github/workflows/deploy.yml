@@ -3,10 +3,10 @@ name: Deploy Vite React App to GitHub Pages
 on:
   push:
     branches:
-      - master  # change to main if needed
+      - master  # or main if using main branch
 
 permissions:
-  contents: write  # required for deploying to gh-pages
+  contents: write
 
 jobs:
   deploy:
@@ -22,14 +22,15 @@ jobs:
           node-version: 20
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Build project
-        run: npm run build
+        run: |
+          npm run build
+          ls -la dist  # show files to confirm build succeeded
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
-          cname: accountsonline.info   # 👈 add this line
