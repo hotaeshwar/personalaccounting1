@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
@@ -204,12 +204,12 @@ const Register = () => {
                                     'Register'
                                 )}
                             </button>
-                            <a 
-                                href="/#/login"
+                            <Link 
+                                to="/login"
                                 className="w-full sm:w-auto text-center text-orange-500 text-sm hover:text-orange-600 transition-colors duration-300"
                             >
                                 Already have an account? Login
-                            </a>
+                            </Link>
                         </div>
                     </form>
 
