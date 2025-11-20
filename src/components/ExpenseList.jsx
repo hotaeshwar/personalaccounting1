@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEye, faFilter, faPlus, faFileInvoice, faTimes, faChartLine, faSort, faMoneyBillWave, faUserShield } from '@fortawesome/free-solid-svg-icons';
+import { faEye, faFilter, faPlus, faFileInvoice, faTimes, faChartLine, faSort, faMoneyBillWave } from '@fortawesome/free-solid-svg-icons';
 import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { db, auth } from '../config/firebase';
 import { useNavigate } from 'react-router-dom';
@@ -20,14 +20,71 @@ const ExpenseList = () => {
     dateFrom: '',
     dateTo: '',
     category: '',
-    createdBy: '',
     amountMin: '',
     amountMax: '',
   });
   
   const navigate = useNavigate();
-  const [userRole, setUserRole] = useState(localStorage.getItem('userRole') || 'user');
-  const [isAdmin, setIsAdmin] = useState(userRole === 'admin');
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      const currentUser = auth.currentUser;
+      
+      if (!currentUser) {
+        setError('Please login to view data.');
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const expensesQuery = query(
+          collection(db, 'expenses'),
+          where('userId', '==', currentUser.uid),
+          orderBy('date', 'desc')
+        );
+
+        const incomeQuery = query(
+          collection(db, 'income'),
+          where('userId', '==', currentUser.uid),
+          orderBy('date', 'desc')
+        );
+
+        const [expensesSnapshot, incomeSnapshot] = await Promise.all([
+          getDocs(expensesQuery),
+          getDocs(incomeQuery)
+        ]);
+
+        const expensesData = expensesSnapshot.docs
+          .map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+            type: 'expense'
+          }))
+          .filter(expense => expense.archived !== true);
+
+        const incomeData = incomeSnapshot.docs
+          .map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+            type: 'income'
+          }))
+          .filter(income => income.archived !== true);
+
+        setExpenses(expensesData);
+        setFilteredExpenses(expensesData);
+        setIncome(incomeData);
+        setFilteredIncome(incomeData);
+
+      } catch (err) {
+        setError('Failed to fetch data. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const getUniqueCategories = () => {
     const categories = new Set();
@@ -49,95 +106,6 @@ const ExpenseList = () => {
       return '₹' + (num / 1000).toFixed(1) + 'K';
     }
     return '₹' + num.toFixed(2);
-  };
-
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      const currentUser = auth.currentUser;
-      
-      if (!currentUser) {
-        setError('Please login to view data.');
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        // FIXED: Added archive filter to exclude archived items
-        const expensesQuery = query(
-          collection(db, 'expenses'),
-          where('userId', '==', currentUser.uid),
-          where('archived', '==', false), // Only show non-archived expenses
-          orderBy('date', 'desc')
-        );
-
-        const incomeQuery = query(
-          collection(db, 'income'),
-          where('userId', '==', currentUser.uid),
-          where('archived', '==', false), // Only show non-archived income
-          orderBy('date', 'desc')
-        );
-
-        const [expensesSnapshot, incomeSnapshot] = await Promise.all([
-          getDocs(expensesQuery),
-          getDocs(incomeQuery)
-        ]);
-
-        // Process expenses
-        const expensesData = expensesSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-          type: 'expense'
-        }));
-
-        // Process income
-        const incomeData = incomeSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-          type: 'income'
-        }));
-
-        setExpenses(expensesData);
-        setFilteredExpenses(expensesData);
-        setIncome(incomeData);
-        setFilteredIncome(incomeData);
-        
-        setSortField('date');
-        setSortDirection('desc');
-
-      } catch (err) {
-        setError('Failed to fetch data. Please try again. Error: ' + err.message);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [isAdmin, userRole]);
-
-  // Debug function to check archive status
-  const debugArchiveStatus = () => {
-    console.log('=== ARCHIVE DEBUG ===');
-    console.log('All expenses:', expenses.length);
-    console.log('All income:', income.length);
-    
-    const archivedExpenses = expenses.filter(exp => exp.archived);
-    const archivedIncome = income.filter(inc => inc.archived);
-    
-    console.log('Archived expenses:', archivedExpenses.length);
-    console.log('Archived income:', archivedIncome.length);
-    
-    expenses.forEach(exp => {
-      if (exp.archived) {
-        console.log(`ARCHIVED Expense: ${exp.description} - ${exp.amount}`);
-      }
-    });
-    
-    income.forEach(inc => {
-      if (inc.archived) {
-        console.log(`ARCHIVED Income: ${inc.description} - ${inc.amount}`);
-      }
-    });
   };
 
   const handleFilterChange = (e) => {
@@ -271,7 +239,6 @@ const ExpenseList = () => {
       dateFrom: '',
       dateTo: '',
       category: '',
-      createdBy: '',
       amountMin: '',
       amountMax: '',
     });
@@ -311,39 +278,20 @@ const ExpenseList = () => {
     return activeTab === 'expenses' ? filteredExpenses : filteredIncome;
   };
 
-  const getTabTitle = () => {
-    return activeTab === 'expenses' ? 'My Expenses' : 'My Income';
-  };
-
   const currentData = getCurrentData();
   const isIncomeTab = activeTab === 'income';
 
   return (
     <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8 bg-gray-50 min-h-screen">
-      {/* Debug button - you can remove this after testing */}
-      <button 
-        onClick={debugArchiveStatus}
-        className="fixed bottom-4 right-4 bg-red-500 text-white p-2 rounded text-xs z-50"
-        style={{display: 'none'}} // Hidden by default
-      >
-        Debug Archive
-      </button>
-
       <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-lg shadow-lg p-4 sm:p-6 mb-4 sm:mb-6 md:mb-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
           <div>
             <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-2">
-              {getTabTitle()}
+              {activeTab === 'expenses' ? 'My Expenses' : 'My Income'}
             </h2>
             <p className="text-blue-100 text-xs sm:text-sm md:text-base">
               Manage and track your financial transactions
             </p>
-            {isAdmin && (
-              <div className="flex items-center mt-2 bg-orange-500 bg-opacity-50 px-3 py-1 rounded-full">
-                <FontAwesomeIcon icon={faUserShield} className="text-white mr-2" />
-                <span className="text-white text-sm font-medium">Admin Account</span>
-              </div>
-            )}
           </div>
           <div className="flex flex-wrap gap-2 sm:gap-3 mt-3 sm:mt-0 w-full sm:w-auto">
             {activeTab === 'expenses' && (
@@ -368,7 +316,6 @@ const ExpenseList = () => {
         </div>
       </div>
 
-      {/* Tab Navigation */}
       <div className="bg-white shadow-md rounded-lg overflow-hidden mb-4 sm:mb-6">
         <div className="grid grid-cols-2">
           <button
@@ -414,7 +361,6 @@ const ExpenseList = () => {
       {!isLoading && currentData.length > 0 && (
         <div className="mb-4 sm:mb-6 md:mb-8">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
-            {/* Total Amount Card */}
             <div className="bg-white rounded-lg shadow-md p-3 sm:p-4 md:p-5 border border-gray-100 transition-all duration-300 hover:shadow-lg">
               <div className="flex items-center">
                 <div className={`${!isIncomeTab ? 'bg-blue-100' : 'bg-green-100'} p-2 sm:p-3 rounded-full`}>
@@ -429,7 +375,6 @@ const ExpenseList = () => {
               </div>
             </div>
             
-            {/* Entry Count Card */}
             <div className="bg-white rounded-lg shadow-md p-3 sm:p-4 md:p-5 border border-gray-100 transition-all duration-300 hover:shadow-lg">
               <div className="flex items-center">
                 <div className={`${!isIncomeTab ? 'bg-indigo-100' : 'bg-green-100'} p-2 sm:p-3 rounded-full`}>
@@ -444,7 +389,6 @@ const ExpenseList = () => {
               </div>
             </div>
             
-            {/* Average Amount Card */}
             <div className="bg-white rounded-lg shadow-md p-3 sm:p-4 md:p-5 border border-gray-100 transition-all duration-300 hover:shadow-lg">
               <div className="flex items-center">
                 <div className={`${!isIncomeTab ? 'bg-emerald-100' : 'bg-green-100'} p-2 sm:p-3 rounded-full`}>
@@ -500,11 +444,201 @@ const ExpenseList = () => {
         </div>
       ) : (
         <div className="bg-white shadow-xl rounded-lg overflow-hidden border border-gray-100">
-          {/* Table content would go here */}
+          <div className="px-4 py-3 sm:px-6 bg-gray-50 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center">
+            <div className="flex items-center mb-2 sm:mb-0">
+              <h3 className="text-sm sm:text-base font-medium text-gray-700">
+                Showing {currentData.length} {!isIncomeTab ? 'expenses' : 'income entries'}
+              </h3>
+            </div>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={`inline-flex items-center px-3 py-1 sm:px-4 sm:py-2 border text-xs sm:text-sm font-medium rounded-md ${
+                  hasActiveFilters()
+                    ? 'border-blue-300 bg-blue-50 text-blue-700'
+                    : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <FontAwesomeIcon icon={faFilter} className="mr-1 sm:mr-2" />
+                Filters
+                {hasActiveFilters() && (
+                  <span className="ml-1 sm:ml-2 bg-blue-600 text-white rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center text-xs">
+                    !
+                  </span>
+                )}
+              </button>
+              {hasActiveFilters() && (
+                <button
+                  onClick={resetFilters}
+                  className="inline-flex items-center px-3 py-1 sm:px-4 sm:py-2 border border-gray-300 text-xs sm:text-sm font-medium rounded-md bg-white text-gray-700 hover:bg-gray-50"
+                >
+                  <FontAwesomeIcon icon={faTimes} className="mr-1 sm:mr-2" />
+                  Clear
+                </button>
+              )}
+            </div>
+          </div>
+
+          {showFilters && (
+            <div className="px-4 py-4 sm:px-6 bg-gray-50 border-b border-gray-200">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">From Date</label>
+                  <input
+                    type="date"
+                    name="dateFrom"
+                    value={filters.dateFrom}
+                    onChange={handleFilterChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">To Date</label>
+                  <input
+                    type="date"
+                    name="dateTo"
+                    value={filters.dateTo}
+                    onChange={handleFilterChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                  />
+                </div>
+                
+                {activeTab === 'expenses' && (
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Category</label>
+                    <select
+                      name="category"
+                      value={filters.category}
+                      onChange={handleFilterChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                    >
+                      <option value="">All Categories</option>
+                      {getUniqueCategories().map(category => (
+                        <option key={category} value={category}>{category}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                
+                <div className="sm:col-span-2 lg:col-span-1">
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Amount Range</label>
+                  <div className="flex space-x-2">
+                    <input
+                      type="number"
+                      name="amountMin"
+                      placeholder="Min"
+                      value={filters.amountMin}
+                      onChange={handleFilterChange}
+                      className="w-1/2 px-3 py-2 border border-gray-300 rounded-md text-sm"
+                    />
+                    <input
+                      type="number"
+                      name="amountMax"
+                      placeholder="Max"
+                      value={filters.amountMax}
+                      onChange={handleFilterChange}
+                      className="w-1/2 px-3 py-2 border border-gray-300 rounded-md text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              <div className="mt-4 flex justify-end">
+                <button
+                  onClick={applyFilters}
+                  className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700"
+                >
+                  Apply Filters
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th 
+                    className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleSort('date')}
+                  >
+                    <div className="flex items-center">
+                      Date
+                      <FontAwesomeIcon 
+                        icon={faSort} 
+                        className={`ml-1 text-gray-400 ${
+                          sortField === 'date' ? 'text-blue-500' : ''
+                        }`}
+                      />
+                    </div>
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Description
+                  </th>
+                  {activeTab === 'expenses' && (
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Category
+                    </th>
+                  )}
+                  <th 
+                    className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleSort('amount')}
+                  >
+                    <div className="flex items-center">
+                      Amount
+                      <FontAwesomeIcon 
+                        icon={faSort} 
+                        className={`ml-1 text-gray-400 ${
+                          sortField === 'amount' ? 'text-blue-500' : ''
+                        }`}
+                      />
+                    </div>
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {currentData.map((item) => (
+                  <tr key={item.id} className="hover:bg-gray-50 transition-colors duration-150">
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                      {formatDate(item.date)}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-900 max-w-xs truncate">
+                      {item.description || 'No description'}
+                    </td>
+                    {activeTab === 'expenses' && (
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          {item.category}
+                        </span>
+                      </td>
+                    )}
+                    <td className={`px-4 py-3 whitespace-nowrap text-sm font-medium ${
+                      item.type === 'income' ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {item.type === 'income' ? '+' : ''}{formatNumber(parseFloat(item.amount))}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">
+                      <button
+                        onClick={() => navigate(`/view-${item.type}/${item.id}`)}
+                        className="text-blue-600 hover:text-blue-900 transition-colors duration-150"
+                      >
+                        <FontAwesomeIcon icon={faEye} className="mr-1" />
+                        View
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>
   );
 };
 
-export default ExpenseList
+export default ExpenseList;
