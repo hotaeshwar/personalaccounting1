@@ -265,9 +265,7 @@ const ExpenseList = () => {
       return date.toLocaleDateString('en-IN', { 
         year: 'numeric', 
         month: 'short', 
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
+        day: 'numeric'
       });
     } catch (err) {
       return 'Invalid date';
@@ -282,33 +280,34 @@ const ExpenseList = () => {
   const isIncomeTab = activeTab === 'income';
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8 bg-gray-50 min-h-screen">
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-lg shadow-lg p-4 sm:p-6 mb-4 sm:mb-6 md:mb-8">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+    <div className="w-full max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-6 md:py-8 bg-gray-50 min-h-screen">
+      {/* Header Section */}
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-xl shadow-lg p-4 mb-4 sm:mb-6 md:mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-3 sm:space-y-0">
           <div>
-            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-2">
+            <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-white mb-1">
               {activeTab === 'expenses' ? 'My Expenses' : 'My Income'}
             </h2>
-            <p className="text-blue-100 text-xs sm:text-sm md:text-base">
+            <p className="text-blue-100 text-xs sm:text-sm">
               Manage and track your financial transactions
             </p>
           </div>
-          <div className="flex flex-wrap gap-2 sm:gap-3 mt-3 sm:mt-0 w-full sm:w-auto">
+          <div className="flex gap-2 w-full sm:w-auto">
             {activeTab === 'expenses' && (
               <button
                 onClick={() => navigate('/add-expense')}
-                className="bg-white hover:bg-blue-50 text-blue-700 font-medium py-2 px-3 sm:px-4 rounded-lg transition-all duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg flex items-center text-xs sm:text-sm w-full sm:w-auto justify-center sm:justify-start mb-2 sm:mb-0"
+                className="bg-white hover:bg-blue-50 text-blue-700 font-medium py-2 px-3 rounded-lg transition-all duration-300 flex items-center text-xs sm:text-sm w-full sm:w-auto justify-center"
               >
-                <FontAwesomeIcon icon={faPlus} className="mr-1 sm:mr-2" />
+                <FontAwesomeIcon icon={faPlus} className="mr-2" />
                 <span>Add Expense</span>
               </button>
             )}
             {activeTab === 'income' && (
               <button
                 onClick={() => navigate('/income')}
-                className="bg-white hover:bg-green-50 text-green-700 font-medium py-2 px-3 sm:px-4 rounded-lg transition-all duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg flex items-center text-xs sm:text-sm w-full sm:w-auto justify-center sm:justify-start mb-2 sm:mb-0"
+                className="bg-white hover:bg-green-50 text-green-700 font-medium py-2 px-3 rounded-lg transition-all duration-300 flex items-center text-xs sm:text-sm w-full sm:w-auto justify-center"
               >
-                <FontAwesomeIcon icon={faPlus} className="mr-1 sm:mr-2" />
+                <FontAwesomeIcon icon={faPlus} className="mr-2" />
                 <span>Add Income</span>
               </button>
             )}
@@ -316,91 +315,86 @@ const ExpenseList = () => {
         </div>
       </div>
 
-      <div className="bg-white shadow-md rounded-lg overflow-hidden mb-4 sm:mb-6">
+      {/* Tab Navigation */}
+      <div className="bg-white shadow-sm rounded-lg overflow-hidden mb-4 sm:mb-6">
         <div className="grid grid-cols-2">
           <button
-            className={`py-3 sm:py-4 font-medium text-xs sm:text-sm md:text-base ${
+            className={`py-3 font-medium text-sm ${
               activeTab === 'expenses' 
                 ? 'bg-blue-600 text-white' 
                 : 'bg-white text-gray-700 hover:bg-gray-50'
             } transition-colors duration-200`}
             onClick={() => setActiveTab('expenses')}
           >
-            <FontAwesomeIcon icon={faFileInvoice} className="mr-1 sm:mr-2" />
-            My Expenses
+            <FontAwesomeIcon icon={faFileInvoice} className="mr-2" />
+            Expenses
           </button>
           <button
-            className={`py-3 sm:py-4 font-medium text-xs sm:text-sm md:text-base ${
+            className={`py-3 font-medium text-sm ${
               activeTab === 'income' 
                 ? 'bg-green-600 text-white' 
                 : 'bg-white text-gray-700 hover:bg-gray-50'
             } transition-colors duration-200`}
             onClick={() => setActiveTab('income')}
           >
-            <FontAwesomeIcon icon={faMoneyBillWave} className="mr-1 sm:mr-2" />
-            My Income
+            <FontAwesomeIcon icon={faMoneyBillWave} className="mr-2" />
+            Income
           </button>
         </div>
       </div>
 
+      {/* Error Message */}
       {error && (
-        <div className="bg-red-50 border-l-4 border-red-500 p-3 sm:p-4 mb-4 sm:mb-6 rounded-lg shadow">
+        <div className="bg-red-50 border-l-4 border-red-500 p-3 mb-4 rounded-lg shadow">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <svg className="h-4 w-4 sm:h-5 sm:w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+              <svg className="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
               </svg>
             </div>
-            <div className="ml-2 sm:ml-3">
-              <p className="text-red-700 text-xs sm:text-sm font-medium">{error}</p>
+            <div className="ml-3">
+              <p className="text-red-700 text-sm font-medium">{error}</p>
             </div>
           </div>
         </div>
       )}
 
+      {/* Stats Cards - Mobile Optimized */}
       {!isLoading && currentData.length > 0 && (
         <div className="mb-4 sm:mb-6 md:mb-8">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
-            <div className="bg-white rounded-lg shadow-md p-3 sm:p-4 md:p-5 border border-gray-100 transition-all duration-300 hover:shadow-lg">
-              <div className="flex items-center">
-                <div className={`${!isIncomeTab ? 'bg-blue-100' : 'bg-green-100'} p-2 sm:p-3 rounded-full`}>
-                  <FontAwesomeIcon icon={!isIncomeTab ? faFileInvoice : faMoneyBillWave} className={`h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 ${!isIncomeTab ? 'text-blue-600' : 'text-green-600'}`} />
-                </div>
-                <div className="ml-3 sm:ml-4 flex-1 min-w-0">
-                  <p className="text-gray-500 text-xs font-medium uppercase truncate">Total Amount</p>
-                  <p className={`text-sm sm:text-base md:text-lg font-bold ${!isIncomeTab ? 'text-gray-800' : 'text-green-800'} truncate`}>
+          <div className="grid grid-cols-1 gap-3">
+            <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-500 text-xs font-medium uppercase">Total Amount</p>
+                  <p className={`text-lg font-bold ${!isIncomeTab ? 'text-gray-800' : 'text-green-800'}`}>
                     {formatNumber(currentData.reduce((sum, item) => sum + parseFloat(item.amount), 0))}
                   </p>
                 </div>
-              </div>
-            </div>
-            
-            <div className="bg-white rounded-lg shadow-md p-3 sm:p-4 md:p-5 border border-gray-100 transition-all duration-300 hover:shadow-lg">
-              <div className="flex items-center">
-                <div className={`${!isIncomeTab ? 'bg-indigo-100' : 'bg-green-100'} p-2 sm:p-3 rounded-full`}>
-                  <svg className={`h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 ${!isIncomeTab ? 'text-indigo-600' : 'text-green-600'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                  </svg>
-                </div>
-                <div className="ml-3 sm:ml-4 flex-1 min-w-0">
-                  <p className="text-gray-500 text-xs font-medium uppercase truncate">Your Entries</p>
-                  <p className="text-sm sm:text-base md:text-lg font-bold text-gray-800 truncate">{currentData.length}</p>
+                <div className={`${!isIncomeTab ? 'bg-blue-100' : 'bg-green-100'} p-3 rounded-full`}>
+                  <FontAwesomeIcon icon={!isIncomeTab ? faFileInvoice : faMoneyBillWave} className={`h-5 w-5 ${!isIncomeTab ? 'text-blue-600' : 'text-green-600'}`} />
                 </div>
               </div>
             </div>
             
-            <div className="bg-white rounded-lg shadow-md p-3 sm:p-4 md:p-5 border border-gray-100 transition-all duration-300 hover:shadow-lg">
-              <div className="flex items-center">
-                <div className={`${!isIncomeTab ? 'bg-emerald-100' : 'bg-green-100'} p-2 sm:p-3 rounded-full`}>
-                  <svg className={`h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 ${!isIncomeTab ? 'text-emerald-600' : 'text-green-600'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                  </svg>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
+                <div className="flex items-center">
+                  <div>
+                    <p className="text-gray-500 text-xs font-medium uppercase">Entries</p>
+                    <p className="text-base font-bold text-gray-800">{currentData.length}</p>
+                  </div>
                 </div>
-                <div className="ml-3 sm:ml-4 flex-1 min-w-0">
-                  <p className="text-gray-500 text-xs font-medium uppercase truncate">Average Amount</p>
-                  <p className="text-sm sm:text-base md:text-lg font-bold text-gray-800 truncate">
-                    {formatNumber(currentData.reduce((sum, item) => sum + parseFloat(item.amount), 0) / currentData.length)}
-                  </p>
+              </div>
+              
+              <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
+                <div className="flex items-center">
+                  <div>
+                    <p className="text-gray-500 text-xs font-medium uppercase">Average</p>
+                    <p className="text-base font-bold text-gray-800">
+                      {formatNumber(currentData.reduce((sum, item) => sum + parseFloat(item.amount), 0) / currentData.length)}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -408,23 +402,25 @@ const ExpenseList = () => {
         </div>
       )}
 
+      {/* Loading State */}
       {isLoading ? (
-        <div className="flex flex-col justify-center items-center h-48 sm:h-64">
-          <div className="animate-spin rounded-full h-10 w-10 sm:h-16 sm:w-16 border-t-4 border-b-4 border-blue-600 mb-3 sm:mb-4"></div>
-          <p className="text-blue-600 text-sm sm:text-base font-medium">Loading your data...</p>
+        <div className="flex flex-col justify-center items-center h-48">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-600 mb-4"></div>
+          <p className="text-blue-600 text-sm font-medium">Loading your data...</p>
         </div>
       ) : currentData.length === 0 ? (
-        <div className="bg-white border border-gray-200 rounded-lg p-6 sm:p-12 text-center shadow-md">
-          <div className={`${!isIncomeTab ? 'text-blue-400' : 'text-green-400'} mb-4 sm:mb-6`}>
-            <FontAwesomeIcon icon={!isIncomeTab ? faFileInvoice : faMoneyBillWave} size="3x" className="sm:text-4xl md:text-5xl" />
+        /* Empty State */
+        <div className="bg-white border border-gray-200 rounded-xl p-8 text-center shadow-sm">
+          <div className={`${!isIncomeTab ? 'text-blue-400' : 'text-green-400'} mb-4`}>
+            <FontAwesomeIcon icon={!isIncomeTab ? faFileInvoice : faMoneyBillWave} size="2x" />
           </div>
-          <span className="text-gray-700 font-medium text-base sm:text-lg md:text-xl">
+          <span className="text-gray-700 font-medium text-base">
             {hasActiveFilters() 
               ? `No ${!isIncomeTab ? 'expenses' : 'income entries'} match your filters.`
               : `No ${!isIncomeTab ? 'expenses' : 'income entries'} found.`
             }
           </span>
-          <p className="text-gray-500 mt-3 sm:mt-4 text-sm sm:text-base">
+          <p className="text-gray-500 mt-3 text-sm">
             {hasActiveFilters() ? (
               <button 
                 onClick={resetFilters}
@@ -435,7 +431,7 @@ const ExpenseList = () => {
             ) : (
               <button
                 onClick={() => navigate(!isIncomeTab ? '/add-expense' : '/income')}
-                className={`mt-2 ${!isIncomeTab ? 'bg-blue-600 hover:bg-blue-700' : 'bg-green-600 hover:bg-green-700'} text-white font-medium py-2 px-4 sm:px-6 rounded-lg transition-all duration-300 text-sm sm:text-base`}
+                className={`mt-2 ${!isIncomeTab ? 'bg-blue-600 hover:bg-blue-700' : 'bg-green-600 hover:bg-green-700'} text-white font-medium py-2 px-4 rounded-lg transition-all duration-300 text-sm`}
               >
                 Add your first {!isIncomeTab ? 'expense' : 'income entry'}
               </button>
@@ -443,65 +439,71 @@ const ExpenseList = () => {
           </p>
         </div>
       ) : (
-        <div className="bg-white shadow-xl rounded-lg overflow-hidden border border-gray-100">
-          <div className="px-4 py-3 sm:px-6 bg-gray-50 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center">
-            <div className="flex items-center mb-2 sm:mb-0">
-              <h3 className="text-sm sm:text-base font-medium text-gray-700">
-                Showing {currentData.length} {!isIncomeTab ? 'expenses' : 'income entries'}
-              </h3>
-            </div>
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className={`inline-flex items-center px-3 py-1 sm:px-4 sm:py-2 border text-xs sm:text-sm font-medium rounded-md ${
-                  hasActiveFilters()
-                    ? 'border-blue-300 bg-blue-50 text-blue-700'
-                    : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                <FontAwesomeIcon icon={faFilter} className="mr-1 sm:mr-2" />
-                Filters
-                {hasActiveFilters() && (
-                  <span className="ml-1 sm:ml-2 bg-blue-600 text-white rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center text-xs">
-                    !
-                  </span>
-                )}
-              </button>
-              {hasActiveFilters() && (
-                <button
-                  onClick={resetFilters}
-                  className="inline-flex items-center px-3 py-1 sm:px-4 sm:py-2 border border-gray-300 text-xs sm:text-sm font-medium rounded-md bg-white text-gray-700 hover:bg-gray-50"
-                >
-                  <FontAwesomeIcon icon={faTimes} className="mr-1 sm:mr-2" />
-                  Clear
-                </button>
-              )}
+        /* Data Table Section */
+        <div className="bg-white shadow-sm rounded-xl overflow-hidden border border-gray-100">
+          {/* Table Header with Filters */}
+          <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
+            <div className="flex flex-col space-y-3">
+              <div className="flex justify-between items-center">
+                <h3 className="text-sm font-medium text-gray-700">
+                  {currentData.length} {!isIncomeTab ? 'expenses' : 'entries'}
+                </h3>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => setShowFilters(!showFilters)}
+                    className={`inline-flex items-center px-3 py-1 border text-xs font-medium rounded-md ${
+                      hasActiveFilters()
+                        ? 'border-blue-300 bg-blue-50 text-blue-700'
+                        : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    <FontAwesomeIcon icon={faFilter} className="mr-2" />
+                    Filters
+                    {hasActiveFilters() && (
+                      <span className="ml-2 bg-blue-600 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs">
+                        !
+                      </span>
+                    )}
+                  </button>
+                  {hasActiveFilters() && (
+                    <button
+                      onClick={resetFilters}
+                      className="inline-flex items-center px-3 py-1 border border-gray-300 text-xs font-medium rounded-md bg-white text-gray-700 hover:bg-gray-50"
+                    >
+                      <FontAwesomeIcon icon={faTimes} className="mr-2" />
+                      Clear
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
 
+          {/* Filters Panel */}
           {showFilters && (
-            <div className="px-4 py-4 sm:px-6 bg-gray-50 border-b border-gray-200">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">From Date</label>
-                  <input
-                    type="date"
-                    name="dateFrom"
-                    value={filters.dateFrom}
-                    onChange={handleFilterChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">To Date</label>
-                  <input
-                    type="date"
-                    name="dateTo"
-                    value={filters.dateTo}
-                    onChange={handleFilterChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                  />
+            <div className="px-4 py-4 bg-gray-50 border-b border-gray-200">
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">From</label>
+                    <input
+                      type="date"
+                      name="dateFrom"
+                      value={filters.dateFrom}
+                      onChange={handleFilterChange}
+                      className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">To</label>
+                    <input
+                      type="date"
+                      name="dateTo"
+                      value={filters.dateTo}
+                      onChange={handleFilterChange}
+                      className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                    />
+                  </div>
                 </div>
                 
                 {activeTab === 'expenses' && (
@@ -511,7 +513,7 @@ const ExpenseList = () => {
                       name="category"
                       value={filters.category}
                       onChange={handleFilterChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                      className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
                     >
                       <option value="">All Categories</option>
                       {getUniqueCategories().map(category => (
@@ -521,7 +523,7 @@ const ExpenseList = () => {
                   </div>
                 )}
                 
-                <div className="sm:col-span-2 lg:col-span-1">
+                <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Amount Range</label>
                   <div className="flex space-x-2">
                     <input
@@ -530,7 +532,7 @@ const ExpenseList = () => {
                       placeholder="Min"
                       value={filters.amountMin}
                       onChange={handleFilterChange}
-                      className="w-1/2 px-3 py-2 border border-gray-300 rounded-md text-sm"
+                      className="w-1/2 px-2 py-1 border border-gray-300 rounded text-xs"
                     />
                     <input
                       type="number"
@@ -538,16 +540,16 @@ const ExpenseList = () => {
                       placeholder="Max"
                       value={filters.amountMax}
                       onChange={handleFilterChange}
-                      className="w-1/2 px-3 py-2 border border-gray-300 rounded-md text-sm"
+                      className="w-1/2 px-2 py-1 border border-gray-300 rounded text-xs"
                     />
                   </div>
                 </div>
               </div>
               
-              <div className="mt-4 flex justify-end">
+              <div className="mt-3 flex justify-end">
                 <button
                   onClick={applyFilters}
-                  className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700"
+                  className="px-3 py-1 bg-blue-600 text-white text-xs font-medium rounded hover:bg-blue-700"
                 >
                   Apply Filters
                 </button>
@@ -555,7 +557,48 @@ const ExpenseList = () => {
             </div>
           )}
 
-          <div className="overflow-x-auto">
+          {/* Mobile Cards View */}
+          <div className="block sm:hidden">
+            <div className="divide-y divide-gray-200">
+              {currentData.map((item) => (
+                <div key={item.id} className="p-4 hover:bg-gray-50 transition-colors duration-150">
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {item.description || 'No description'}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {formatDate(item.date)}
+                      </p>
+                    </div>
+                    <p className={`text-sm font-medium ml-2 ${
+                      item.type === 'income' ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {item.type === 'income' ? '+' : ''}{formatNumber(parseFloat(item.amount))}
+                    </p>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    {activeTab === 'expenses' && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                        {item.category}
+                      </span>
+                    )}
+                    <button
+                      onClick={() => navigate(`/view-${item.type}/${item.id}`)}
+                      className="text-blue-600 hover:text-blue-900 transition-colors duration-150 text-xs font-medium flex items-center"
+                    >
+                      <FontAwesomeIcon icon={faEye} className="mr-1" />
+                      View Details
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Desktop Table View */}
+          <div className="hidden sm:block overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
@@ -595,9 +638,6 @@ const ExpenseList = () => {
                       />
                     </div>
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -620,15 +660,6 @@ const ExpenseList = () => {
                       item.type === 'income' ? 'text-green-600' : 'text-red-600'
                     }`}>
                       {item.type === 'income' ? '+' : ''}{formatNumber(parseFloat(item.amount))}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">
-                      <button
-                        onClick={() => navigate(`/view-${item.type}/${item.id}`)}
-                        className="text-blue-600 hover:text-blue-900 transition-colors duration-150"
-                      >
-                        <FontAwesomeIcon icon={faEye} className="mr-1" />
-                        View
-                      </button>
                     </td>
                   </tr>
                 ))}
