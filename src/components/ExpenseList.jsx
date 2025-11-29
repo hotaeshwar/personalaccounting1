@@ -584,13 +584,7 @@ const ExpenseList = () => {
                         {item.category}
                       </span>
                     )}
-                    <button
-                      onClick={() => navigate(`/view-${item.type}/${item.id}`)}
-                      className="text-blue-600 hover:text-blue-900 transition-colors duration-150 text-xs font-medium flex items-center"
-                    >
-                      <FontAwesomeIcon icon={faEye} className="mr-1" />
-                      View Details
-                    </button>
+                    {/* View button removed from mobile cards */}
                   </div>
                 </div>
               ))}
@@ -638,6 +632,7 @@ const ExpenseList = () => {
                       />
                     </div>
                   </th>
+                  {/* Actions column header removed */}
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -661,6 +656,7 @@ const ExpenseList = () => {
                     }`}>
                       {item.type === 'income' ? '+' : ''}{formatNumber(parseFloat(item.amount))}
                     </td>
+                    {/* Actions column data removed */}
                   </tr>
                 ))}
               </tbody>
