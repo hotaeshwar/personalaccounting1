@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
+import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
   apiKey: "AIzaSyBtO5NTyvVUm60G7LCs17DBC5271FCEkB0",
@@ -14,10 +15,11 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
+const storage = getStorage(app);
 
 // Export admin secret key
 export const ADMIN_SECRET_KEY = typeof process !== 'undefined'
   ? (process.env.NEXT_PUBLIC_ADMIN_SECRET_KEY || process.env.VITE_ADMIN_SECRET_KEY)
   : '';
 
-export { app, db, auth };
+export { app, db, auth, storage };

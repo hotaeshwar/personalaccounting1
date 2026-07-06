@@ -7,7 +7,7 @@ import { faArrowLeft, faSpinner, faFilePdf, faDownload } from '@fortawesome/free
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db, auth } from '../config/firebase';
 import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+import html2canvas from 'html2canvas-pro';
 
 const InvoiceDetails = () => {
     const params = useParams();

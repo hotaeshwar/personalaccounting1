@@ -10,11 +10,17 @@ import {
   faCalendarAlt,
   faCalendarDay,
   faCalendarWeek,
-  faCalendar
+  faCalendar,
+  faDownload,
+  faSpinner
 } from '@fortawesome/free-solid-svg-icons';
-import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
-import { db, auth } from '../config/firebase';
+import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
+import { collection, query, where, getDocs, orderBy, doc, updateDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db, auth, storage } from '../config/firebase';
 import { useRouter } from 'next/navigation';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas-pro';
 
 const ExpenseList = () => {
   // States for data
@@ -36,6 +42,11 @@ const ExpenseList = () => {
     amountMax: '',
     dateRange: 'all' // New: predefined date ranges
   });
+
+  // States for sharing & receipt preview modal
+  const [showReceiptModal, setShowReceiptModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [isSharing, setIsSharing] = useState(false);
   
   // Date range presets
   const dateRangePresets = [
@@ -470,6 +481,293 @@ const ExpenseList = () => {
     return activeTab === 'expenses' ? filteredExpenses : filteredIncome;
   };
 
+  const generateReceiptPdfBlob = async (item) => {
+    // Create a temporary container
+    const div = document.createElement('div');
+    div.style.position = 'absolute';
+    div.style.left = '-9999px';
+    div.style.top = '-9999px';
+    div.style.width = '450px'; // standard width for receipt
+    div.style.backgroundColor = '#ffffff';
+    document.body.appendChild(div);
+
+    const formattedAmount = parseFloat(item.amount).toLocaleString('en-IN', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+
+    // Populate with beautifully styled HTML
+    div.innerHTML = `
+      <div style="padding: 30px; font-family: 'Segoe UI', Arial, sans-serif; color: #1e293b; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-sizing: border-box;">
+        <!-- Logo & Branding -->
+        <div style="text-align: center; margin-bottom: 20px;">
+          <img src="/images/LOGO.png" alt="BiD Logo" style="height: 56px; margin: 0 auto 8px auto; display: block; object-fit: contain;" />
+          <h2 style="font-size: 22px; font-weight: 800; color: #1e293b; margin: 0 0 4px 0; font-family: sans-serif;">BiD Finance</h2>
+          <p style="font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin: 0;">Official Transaction Receipt</p>
+        </div>
+
+        <!-- Dotted Divider -->
+        <div style="border-top: 1px dashed #cbd5e1; margin: 15px 0;"></div>
+
+        <!-- Details -->
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px; margin: 20px 0;">
+          <tr style="height: 32px;">
+            <td style="color: #64748b; font-weight: 500;">Reference No:</td>
+            <td style="text-align: right; color: #1e293b; font-weight: 700; font-family: monospace;">${item.invoice_id}</td>
+          </tr>
+          <tr style="height: 32px;">
+            <td style="color: #64748b; font-weight: 500;">Date:</td>
+            <td style="text-align: right; color: #1e293b; font-weight: 600;">${formatDate(item.date)}</td>
+          </tr>
+          <tr style="height: 32px;">
+            <td style="color: #64748b; font-weight: 500;">Category:</td>
+            <td style="text-align: right; color: #1e293b; font-weight: 600;">${item.category}</td>
+          </tr>
+          <tr style="height: 32px; vertical-align: top;">
+            <td style="color: #64748b; font-weight: 500; padding-top: 6px;">Description:</td>
+            <td style="text-align: right; color: #1e293b; font-weight: 600; padding-top: 6px; max-width: 200px; word-wrap: break-word;">${item.description || 'No description'}</td>
+          </tr>
+          <tr style="height: 32px;">
+            <td style="color: #64748b; font-weight: 500;">Payment Status:</td>
+            <td style="text-align: right; color: #15803d; font-weight: 700;">Paid</td>
+          </tr>
+        </table>
+
+        <!-- Dotted Divider -->
+        <div style="border-top: 1px dashed #cbd5e1; margin: 15px 0;"></div>
+
+        <!-- Total Amount -->
+        <div style="text-align: center; margin: 20px 0;">
+          <span style="font-size: 9px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 5px;">Total Amount</span>
+          <span style="font-size: 26px; font-weight: 800; color: #0f172a; display: block;">₹ ${formattedAmount}</span>
+          <span style="display: inline-block; padding: 4px 10px; border-radius: 9999px; background-color: #dcfce7; color: #166534; font-size: 10px; font-weight: 700; margin-top: 10px; text-transform: uppercase;">Completed</span>
+        </div>
+        
+        <!-- Footer -->
+        <div style="text-align: center; font-size: 9px; color: #64748b; margin-top: 25px; padding-top: 15px; border-top: 1px solid #f1f5f9;">
+          Thank you for using BiD Finance. This receipt is automatically generated and is valid for reference.
+        </div>
+      </div>
+    `;
+
+    // Wait a short duration to ensure styles and fonts render
+    await new Promise((resolve) => setTimeout(resolve, 150));
+
+      // Render canvas
+      const canvas = await html2canvas(div, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        allowTaint: true,
+        backgroundColor: '#ffffff'
+      });
+
+    // Clean up temporary div
+    document.body.removeChild(div);
+
+    // Create PDF
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'px',
+      format: [canvas.width / 2, canvas.height / 2]
+    });
+
+    pdf.addImage(imgData, 'PNG', 0, 0, canvas.width / 2, canvas.height / 2);
+    return {
+      pdf,
+      canvas,
+      blob: pdf.output('blob')
+    };
+  };
+
+  const handleShareClick = (item) => {
+    setSelectedItem(item);
+    setShowReceiptModal(true);
+  };
+
+  const handleShareToWhatsApp = async () => {
+    if (!selectedItem) return;
+    setIsSharing(true);
+    console.log("Starting WhatsApp sharing for:", selectedItem);
+    try {
+      console.log("Generating PDF blob...");
+      const { blob, pdf } = await generateReceiptPdfBlob(selectedItem);
+      console.log("PDF blob generated successfully.");
+
+      // Direct native share if supported on mobile
+      let sharedDirectly = false;
+      if (navigator.share && navigator.canShare && blob) {
+        try {
+          console.log("Attempting direct Web Share API...");
+          const file = new File([blob], `Receipt_${selectedItem.invoice_id}.pdf`, { type: 'application/pdf' });
+          if (navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              files: [file],
+              title: 'Transaction Receipt',
+              text: `Official Transaction Receipt: ${selectedItem.invoice_id}`
+            });
+            sharedDirectly = true;
+            console.log("Shared directly via Web Share API.");
+          }
+        } catch (err) {
+          console.warn("Direct file sharing failed, falling back to desktop flow", err);
+        }
+      }
+
+      if (!sharedDirectly) {
+        // Prepare WhatsApp message
+        const message = `Please find attached the transaction receipt for Reference No: ${selectedItem.invoice_id}`;
+        const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+        console.log("Opening WhatsApp URL:", waUrl);
+
+        // Open WhatsApp Web or mobile app link in a new tab
+        const newWindow = window.open(waUrl, '_blank');
+        if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+          console.warn("Popup blocked! Redirecting current window for WhatsApp...");
+          window.open(waUrl, '_self');
+        }
+
+        // Trigger local download of the PDF so user can drag-and-drop it into WhatsApp Web
+        console.log("Downloading PDF locally for drag-and-drop...");
+        pdf.save(`Receipt_${selectedItem.invoice_id}.pdf`);
+        console.log("Local PDF download triggered.");
+      }
+    } catch (err) {
+      console.error("Error during WhatsApp sharing: ", err);
+      alert("Failed to share PDF. Please try again.");
+    } finally {
+      setIsSharing(false);
+      console.log("WhatsApp sharing process finished.");
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!selectedItem) return;
+    try {
+      console.log("Generating and downloading PDF...");
+      const { pdf } = await generateReceiptPdfBlob(selectedItem);
+      pdf.save(`Receipt_${selectedItem.invoice_id}.pdf`);
+    } catch (err) {
+      console.error("Error downloading PDF:", err);
+      alert("Failed to generate PDF download.");
+    }
+  };
+
+  const handleDownloadPNG = async () => {
+    if (!selectedItem) return;
+    try {
+      const { canvas } = await generateReceiptPdfBlob(selectedItem);
+      const link = document.createElement('a');
+      link.download = `Receipt_${selectedItem.invoice_id}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    } catch (err) {
+      console.error("Error downloading PNG:", err);
+      alert("Failed to generate PNG image.");
+    }
+  };
+
+  const handlePrintReceipt = async () => {
+    if (!selectedItem) return;
+    try {
+      const formattedAmount = parseFloat(selectedItem.amount).toLocaleString('en-IN', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Receipt ${selectedItem.invoice_id}</title>
+            <style>
+              body {
+                font-family: 'Segoe UI', Arial, sans-serif;
+                color: #1e293b;
+                background-color: #ffffff;
+                margin: 40px;
+                display: flex;
+                justify-content: center;
+              }
+              .receipt-container {
+                width: 450px;
+                padding: 30px;
+                border: 1px solid #e2e8f0;
+                border-radius: 12px;
+                box-sizing: border-box;
+              }
+              .text-center { text-align: center; }
+              .logo { height: 56px; margin: 0 auto 8px auto; display: block; object-fit: contain; }
+              .title { font-size: 22px; font-weight: 800; color: #1e293b; margin: 0 0 4px 0; }
+              .subtitle { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin: 0; }
+              .divider { border-top: 1px dashed #cbd5e1; margin: 15px 0; }
+              table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 20px 0; }
+              tr { height: 32px; }
+              td.label { color: #64748b; font-weight: 500; }
+              td.value { text-align: right; color: #1e293b; font-weight: 600; }
+              td.mono { font-family: monospace; font-weight: 700; }
+              td.status { color: #15803d; font-weight: 700; }
+              .amount-section { text-align: center; margin: 20px 0; }
+              .amount-label { font-size: 9px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 5px; }
+              .amount-val { font-size: 26px; font-weight: 800; color: #0f172a; display: block; }
+              .badge { display: inline-block; padding: 4px 10px; border-radius: 9999px; background-color: #dcfce7; color: #166534; font-size: 10px; font-weight: 700; margin-top: 10px; text-transform: uppercase; }
+              .footer { text-align: center; font-size: 9px; color: #64748b; margin-top: 25px; padding-top: 15px; border-top: 1px solid #f1f5f9; }
+              @media print {
+                body { margin: 0; display: block; }
+                .receipt-container { width: 100%; border: none; padding: 0; }
+              }
+            </style>
+          </head>
+          <body onload="window.print(); window.close();">
+            <div class="receipt-container">
+              <div class="text-center">
+                <img src="/images/LOGO.png" alt="BiD Logo" class="logo" />
+                <h2 class="title">BiD Finance</h2>
+                <p class="subtitle">Official Transaction Receipt</p>
+              </div>
+              <div class="divider"></div>
+              <table>
+                <tr>
+                  <td class="label">Reference No:</td>
+                  <td class="value mono">${selectedItem.invoice_id}</td>
+                </tr>
+                <tr>
+                  <td class="label">Date:</td>
+                  <td class="value">${formatDate(selectedItem.date)}</td>
+                </tr>
+                <tr>
+                  <td class="label">Category:</td>
+                  <td class="value">${selectedItem.category}</td>
+                </tr>
+                <tr style="vertical-align: top;">
+                  <td class="label" style="padding-top: 6px;">Description:</td>
+                  <td class="value" style="padding-top: 6px; max-width: 200px; word-wrap: break-word;">${selectedItem.description || 'No description'}</td>
+                </tr>
+                <tr>
+                  <td class="label">Payment Status:</td>
+                  <td class="value status">Paid</td>
+                </tr>
+              </table>
+              <div class="divider"></div>
+              <div class="amount-section">
+                <span class="amount-label">Total Amount</span>
+                <span class="amount-val">₹ ${formattedAmount}</span>
+                <span class="badge">Completed</span>
+              </div>
+              <div class="footer">
+                Thank you for using BiD Finance. This receipt is automatically generated and is valid for reference.
+              </div>
+            </div>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+    } catch (err) {
+      console.error("Error printing receipt:", err);
+      alert("Failed to open print page.");
+    }
+  };
+
   const currentData = getCurrentData();
   const isIncomeTab = activeTab === 'income';
 
@@ -840,12 +1138,21 @@ const ExpenseList = () => {
                     </p>
                   </div>
                   
-                  <div className="flex justify-between items-center">
-                    {activeTab === 'expenses' && (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                        {item.category}
-                      </span>
-                    )}
+                  <div className="flex justify-between items-center mt-2">
+                    <div>
+                      {activeTab === 'expenses' && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                          {item.category}
+                        </span>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => handleShareClick(item)}
+                      className="inline-flex items-center space-x-1 text-green-600 hover:text-green-700 bg-green-50 hover:bg-green-100 px-2 py-1 rounded text-xs font-medium transition-all duration-150 cursor-pointer"
+                    >
+                      <FontAwesomeIcon icon={faWhatsapp} className="w-3.5 h-3.5" />
+                      <span>Share Receipt</span>
+                    </button>
                   </div>
                 </div>
               ))}
@@ -893,6 +1200,9 @@ const ExpenseList = () => {
                       />
                     </div>
                   </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -916,10 +1226,161 @@ const ExpenseList = () => {
                     }`}>
                       {item.type === 'income' ? '+' : ''}{formatNumber(parseFloat(item.amount))}
                     </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                      <button
+                        onClick={() => handleShareClick(item)}
+                        className="inline-flex items-center space-x-1.5 text-green-600 hover:text-green-700 hover:bg-green-50 px-2.5 py-1 rounded-md text-xs font-semibold border border-green-200 transition-all duration-150 cursor-pointer"
+                        title="Share on WhatsApp"
+                      >
+                        <FontAwesomeIcon icon={faWhatsapp} className="w-3.5 h-3.5" />
+                        <span>Share Receipt</span>
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+      {/* Receipt Preview & Share Modal */}
+      {showReceiptModal && selectedItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
+          <div className="relative w-full max-w-lg bg-gray-50 rounded-2xl shadow-2xl overflow-hidden my-8 transform transition-all duration-300 scale-100">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 bg-white border-b border-gray-100">
+              <div className="flex items-center space-x-2 text-gray-800 font-semibold">
+                <FontAwesomeIcon icon={faFileInvoice} className="text-blue-600 w-5 h-5" />
+                <span>Transaction Receipt</span>
+              </div>
+              <button
+                onClick={() => setShowReceiptModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors duration-150 p-1 cursor-pointer"
+              >
+                <FontAwesomeIcon icon={faTimes} className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body / Receipt Container */}
+            <div className="p-6 overflow-y-auto max-h-[calc(100vh-200px)]">
+              {/* Receipt Card */}
+              <div className="bg-white rounded-xl border border-gray-200/80 shadow-md p-6 mb-6 relative">
+                {/* Logo & Branding */}
+                <div className="text-center mb-6">
+                  <img src="/images/LOGO.png" alt="BiD Logo" className="h-14 mx-auto mb-2 object-contain" />
+                  <h3 className="text-lg font-bold text-gray-800">BiD Finance</h3>
+                  <p className="text-[10px] font-semibold text-gray-400 tracking-wider uppercase">Official Transaction Receipt</p>
+                </div>
+
+                {/* Dotted Divider */}
+                <div className="border-t border-dashed border-gray-300 my-4"></div>
+
+                {/* Details Table */}
+                <div className="space-y-3.5 text-sm my-6">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-400 font-medium">Reference No:</span>
+                    <span className="text-gray-800 font-bold font-mono">{selectedItem.invoice_id}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-400 font-medium">Date:</span>
+                    <span className="text-gray-800 font-semibold flex items-center">
+                      <FontAwesomeIcon icon={faCalendarAlt} className="text-gray-400 mr-1.5 w-3.5 h-3.5" />
+                      {formatDate(selectedItem.date)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-400 font-medium">Category:</span>
+                    <span className="text-gray-800 font-semibold">{selectedItem.category}</span>
+                  </div>
+                  <div className="flex justify-between items-start">
+                    <span className="text-gray-400 font-medium">Description:</span>
+                    <span className="text-gray-800 font-semibold text-right max-w-[200px] break-words">
+                      {selectedItem.description || 'No description'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-400 font-medium">Payment Status:</span>
+                    <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                      Paid
+                    </span>
+                  </div>
+                </div>
+
+                {/* Dotted Divider */}
+                <div className="border-t border-dashed border-gray-300 my-4"></div>
+
+                {/* Amount Section */}
+                <div className="text-center my-6">
+                  <span className="text-[10px] font-bold text-gray-400 tracking-wider uppercase block mb-1">Total Amount</span>
+                  <span className="text-3xl font-extrabold text-gray-800 block">
+                    ₹ {parseFloat(selectedItem.amount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                  <div className="mt-3">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800 uppercase tracking-wide">
+                      ● Completed
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="space-y-3">
+                <button
+                  onClick={handleShareToWhatsApp}
+                  disabled={isSharing}
+                  className="w-full bg-[#00a884] hover:bg-[#008f72] text-white py-3 px-4 rounded-xl font-semibold flex items-center justify-center transition-all duration-200 shadow-md cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed transform active:scale-[0.98]"
+                >
+                  {isSharing ? (
+                    <>
+                      <FontAwesomeIcon icon={faSpinner} className="animate-spin mr-2 w-5 h-5" />
+                      <span>Processing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <FontAwesomeIcon icon={faWhatsapp} className="mr-2 w-5 h-5" />
+                      <span>Share PDF to WhatsApp</span>
+                    </>
+                  )}
+                </button>
+
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    onClick={handleDownloadPDF}
+                    className="bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 py-2.5 px-2 rounded-xl text-xs font-semibold flex flex-col items-center justify-center transition-all duration-150 cursor-pointer shadow-sm"
+                  >
+                    <FontAwesomeIcon icon={faDownload} className="text-blue-500 mb-1.5 w-4 h-4" />
+                    <span>PDF File</span>
+                  </button>
+                  <button
+                    onClick={handleDownloadPNG}
+                    className="bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 py-2.5 px-2 rounded-xl text-xs font-semibold flex flex-col items-center justify-center transition-all duration-150 cursor-pointer shadow-sm"
+                  >
+                    <FontAwesomeIcon icon={faDownload} className="text-indigo-500 mb-1.5 w-4 h-4" />
+                    <span>PNG Image</span>
+                  </button>
+                  <button
+                    onClick={handlePrintReceipt}
+                    className="bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 py-2.5 px-2 rounded-xl text-xs font-semibold flex flex-col items-center justify-center transition-all duration-150 cursor-pointer shadow-sm"
+                  >
+                    <FontAwesomeIcon icon={faFileInvoice} className="text-green-500 mb-1.5 w-4 h-4" />
+                    <span>Print/PDF</span>
+                  </button>
+                </div>
+
+                {/* Info Banner */}
+                <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-3.5 text-xs text-blue-700/80 leading-relaxed">
+                  💡 <strong>WhatsApp Sharing:</strong> On mobile devices, <em>Share PDF to WhatsApp</em> will prompt the native app directly. On desktop computers, it downloads the PDF file and opens WhatsApp so you can drag-and-drop the PDF.
+                </div>
+
+                {/* Close Button */}
+                <button
+                  onClick={() => setShowReceiptModal(false)}
+                  className="w-full bg-[#1e293b] hover:bg-[#0f172a] text-white py-3 px-4 rounded-xl font-semibold transition-all duration-200 cursor-pointer shadow-md text-sm mt-2"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
