@@ -532,10 +532,10 @@ Ask me anything about your finances or choose one of these prompts:
       
       {/* Personalized Greeting Header */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6 md:mb-8 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-950 p-6 rounded-2xl shadow-lg border border-indigo-900/40 transition-all duration-300 hover:shadow-xl">
-        <div>
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-white flex items-center gap-2">
+        <div className="min-w-0 w-full lg:w-auto">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-white flex flex-wrap items-center gap-x-2 gap-y-1 min-w-0">
             <span>{getGreeting()},</span>
-            <span className="bg-gradient-to-r from-orange-400 to-green-400 bg-clip-text text-transparent">{userName}</span>
+            <span className="bg-gradient-to-r from-orange-400 to-green-400 bg-clip-text text-transparent break-words">{userName}</span>
           </h1>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <span className="bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded-full text-[10px] font-extrabold flex items-center gap-1">
