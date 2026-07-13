@@ -166,7 +166,7 @@ const Sidebar = () => {
             >
                 <div className="sticky top-0">
                     {/* Header with user info */}
-                    <div className="flex items-center justify-between p-4 border-b border-gray-700">
+                    <div className={`flex items-center p-4 border-b border-gray-700 ${expanded ? 'justify-between' : 'justify-center'}`}>
                         <div className={`flex items-center space-x-3 transition-opacity duration-300 ${expanded ? 'opacity-100' : 'opacity-0 hidden'}`}>
                             <div className="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center text-sm font-bold">
                                 {userName ? userName.charAt(0).toUpperCase() : 'U'}
@@ -179,7 +179,7 @@ const Sidebar = () => {
                             </div>
                         </div>
                         
-                        {!expanded && (
+                        {!expanded && !isMobile && (
                             <div className="flex flex-col items-center">
                                 <div className="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center text-xs font-bold mb-1">
                                     {userName ? userName.charAt(0).toUpperCase() : 'U'}
@@ -190,7 +190,7 @@ const Sidebar = () => {
                         {isMobile && (
                             <button 
                                 onClick={toggleSidebar} 
-                                className="p-1 rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-600 transition-all duration-300 cursor-pointer"
+                                className="p-1 rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-600 transition-all duration-300 cursor-pointer flex items-center justify-center"
                             >
                                 <FontAwesomeIcon icon={faBars} className="text-gray-300 hover:text-white" />
                             </button>

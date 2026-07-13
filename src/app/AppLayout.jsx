@@ -144,7 +144,7 @@ export default function AppLayout({ children }) {
         {/* Only show sidebar if user is logged in AND not on auth pages */}
         {isLoggedIn && !isAuthPage && <Sidebar />}
         
-        <div className={`flex-1 p-4 overflow-auto transition-all duration-300 ${isLoggedIn && !isAuthPage ? 'md:ml-16' : ''}`}>
+        <div className={`flex-1 p-4 overflow-auto transition-all duration-300 ${isLoggedIn && !isAuthPage ? 'ml-16' : ''}`}>
           {children}
         </div>
       </div>
